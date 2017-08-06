@@ -1,0 +1,9 @@
+rtbassoc-75c4e50c
+True
+setup_p2.sh: line 13: /Users/goharirfan/Desktop/deep_learning/gohar-aws.pem: Permission denied
+Waiting for instance start...
+securityGroupId=sg-d7b467ad
+subnetId=subnet-bb2395e0
+instanceId=i-05b63fee656b26faa
+instanceUrl=ec2-52-37-168-36.us-west-2.compute.amazonaws.com
+Connect: ssh -i /Users/goharirfan/Desktop/deep_learning/gohar-aws.pem ubuntu@ec2-52-37-168-36.us-west-2.compute.amazonaws.com

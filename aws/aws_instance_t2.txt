@@ -1,0 +1,8 @@
+rtbassoc-823a1cfb
+True
+Waiting for instance start...
+securityGroupId=sg-e0b1609a
+subnetId=subnet-afcf79f4
+instanceId=i-071ab6f4a1e46c955
+instanceUrl=ec2-35-166-182-48.us-west-2.compute.amazonaws.com
+Connect: ssh -i /Users/goharirfan/Desktop/deep_learning/gohar-aws.pem ubuntu@ec2-35-166-182-48.us-west-2.compute.amazonaws.com

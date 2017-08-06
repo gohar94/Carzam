@@ -1,0 +1,8 @@
+user:
+gohar
+user group:
+gohar-group
+access key id:
+AKIAJBVXBWYR732AB7XQ
+secret access key:
+ubVqcw3DSooWUlsbDg6PUEOILE7CRBAVBWqj//5l
