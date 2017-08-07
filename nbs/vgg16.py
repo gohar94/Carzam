@@ -192,7 +192,7 @@ class Vgg16():
             See Keras documentation: https://keras.io/models/model/
         """
         self.model.compile(optimizer=Adam(lr=lr),
-                loss='categorical_crossentropy', metrics=['accuracy'])
+                loss='categorical_crossentropy', metrics=['accuracy', 'top_k_categorical_accuracy'])
 
 
     def fit_data(self, trn, labels,  val, val_labels,  nb_epoch=1, batch_size=64):

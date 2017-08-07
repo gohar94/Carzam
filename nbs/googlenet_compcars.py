@@ -178,6 +178,16 @@ def googlenet_model(img_rows, img_cols, channel=1, num_classes=None):
     
     return model 
 
+def check_count_correct(filenames, classes):
+    assert(len(filenames) == len(classes))
+    correct = incorrect = 0
+    for i in range(len(filenames)):
+        if filenames[i].split('/')[0] == classes[i]:
+            correct += 1
+        else:
+            incorrect += 1
+    return correct, incorrect
+
 if __name__ == '__main__':
 
     # Example to fine-tune on 3000 samples from Cifar10
@@ -195,10 +205,42 @@ if __name__ == '__main__':
                                          batch_size=BATCH_SIZE)
     
     model = googlenet_model(img_rows, img_cols, channel, batches.nb_class)
-    
+    model.load_weights('')
+    test_batches = jeremy_vgg16.Vgg16().get_batches(DATA_PATH+'test', gen=image.ImageDataGenerator(preprocessing_function=jeremy_vgg16.vgg_preprocess), shuffle=False, batch_size=batch_size, class_mode=None)
+    probs = model.predict_generator(test_batches, test_batches.nb_sample)
+    print probs
+    labels = test_batches.classes
+    filenames = test_batches.filenames
+    print labels
+    print filenames
+    labels_predicted = [np.argmax(prob) for prob in probs]
+    classes = [vgg.classes[idx] for idx in labels_predicted]
+    correct, incorrect = check_count_correct(filenames, classes)
+    print correct
+    print incorrect
+    """    
     history = model.fit_generator(batches,
                             validation_data=val_batches,
                             samples_per_epoch=batches.nb_sample,
                             nb_val_samples=val_batches.nb_sample,
                             nb_epoch=10)
-    keras_vgg.save_weights('inception_model_adam_10.h5')
+    model.save_weights('inception_model_adam_10.h5')
+    history = model.fit_generator(batches,
+                            validation_data=val_batches,
+                            samples_per_epoch=batches.nb_sample,
+                            nb_val_samples=val_batches.nb_sample,
+                            nb_epoch=20)
+    model.save_weights('inception_model_adam_30.h5')
+    history = model.fit_generator(batches,
+                            validation_data=val_batches,
+                            samples_per_epoch=batches.nb_sample,
+                            nb_val_samples=val_batches.nb_sample,
+                            nb_epoch=30)
+    model.save_weights('inception_model_adam_60.h5')
+    history = model.fit_generator(batches,
+                            validation_data=val_batches,
+                            samples_per_epoch=batches.nb_sample,
+                            nb_val_samples=val_batches.nb_sample,
+                            nb_epoch=40)
+    model.save_weights('inception_model_adam_100.h5')
+    """
