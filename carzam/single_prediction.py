@@ -15,13 +15,6 @@ def predict(image_file_path):
     """
 
     """
-    img = Image.open(image_file_path)
-    if img.size != (img_rows, img_cols):
-        img = img.resize((img_rows, img_cols))
-    x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
-    x = utils.vgg_preprocess(x)
-
     img_rows = 224
     img_cols = 224
     channel = 3
@@ -29,6 +22,13 @@ def predict(image_file_path):
     data_path = "../data/compcars/data/image/"
     model_path = "../models/"
     imagenet_model_path = "../imagenet_models/"
+
+    img = Image.open(image_file_path)
+    if img.size != (img_rows, img_cols):
+        img = img.resize((img_rows, img_cols))
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = utils.vgg_preprocess(x)
 
     batches = utils.get_batches(data_path+'train', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=batch_size)
 
