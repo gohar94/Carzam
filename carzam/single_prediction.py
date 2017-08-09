@@ -40,6 +40,20 @@ def predict(image_file_path):
 
     probs = model_vgg19.predict(x)
     print probs
+    
+    # Get a list of all the class labels
+    classes_ids = list(iter(batches.class_indices))
+    for c in batches.class_indices:
+        classes_ids[batches.class_indices[c]] = c
+    labels_predicted = [np.argmax(prob) for prob in probs]
+    classes = [classes_ids[idx] for idx in labels_predicted]
+    top_5_labels_pred = [np.argpartition(prob, -5)[-5:] for prob in probs]
+    classes_top_5 = []
+    for i in range(len(top_5_labels_pred)):
+        classes_temp = [classes_ids[idx] for idx in top_5_labels_pred[i]]
+        classes_top_5.append(classes_temp)
+    print classes
+    print classes_top_5
 
 if __name__ == '__main__':
     predict(sys.argv[1])
