@@ -3,7 +3,8 @@
 
 """
 from keras.preprocessing import image
-import compcars_models
+from compcars_vgg19_model import vgg19_model
+from compcars_inception_v1_model import googlenet_model
 import utils
 
 def train(model_name):
@@ -23,9 +24,9 @@ def train(model_name):
     
     # Create model
     if model_name == "inception_v1":
-        model = compcars_models.googlenet_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
+        model = googlenet_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
     elif model_name == "vgg19":
-        model = compcars_models.vgg19_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
+        model = vgg19_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
     
     # Train and save intermediate results
     history = model.fit_generator(batches,

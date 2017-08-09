@@ -1,5 +1,5 @@
 from keras.optimizers import SGD
-from keras.layers import Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, Activation
+from keras.layers import Dense, Convolution2D, MaxPooling2D, ZeroPadding2D, Dropout, Flatten, Activation
 from keras.models import Sequential
 
 def vgg19_model(img_rows, img_cols, channel=1, num_classes=None, model_path="../imagenet_models/"):

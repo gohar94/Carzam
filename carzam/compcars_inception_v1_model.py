@@ -2,7 +2,7 @@
 
 """
 from keras.optimizers import SGD
-from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, ZeroPadding2D, Dropout, merge, Flatten, Activation
+from keras.layers import Input, Dense, AveragePooling2D, Convolution2D, MaxPooling2D, ZeroPadding2D, Dropout, merge, Flatten, Activation
 from keras.regularizers import l2
 from keras.models import Model
 from googlenet_custom_layers import LRN, PoolHelper
