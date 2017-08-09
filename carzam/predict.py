@@ -6,8 +6,8 @@ from keras.preprocessing import image
 import numpy as np
 import utils
 import pickle
-import compcars_vgg19_model
-import compcars_inception_v1_model
+from compcars_vgg19_model import vgg19_model
+from compcars_inception_v1_model import googlenet_model
 
 class PredictionResults(object):
     """
@@ -113,16 +113,12 @@ def combined_prediction(results_a, results_b):
     print "Top 5: Correct %d, Incorrect %d" % (correct_top_5, incorrect_top_5)
 
 def main():
-    """
     results_vgg19 = predict("vgg19", "vgg19_model_60.h5")
     pickle.dump(results_vgg19, open("results_vgg19.p", "wb"))
-    """
-    results_vgg19 = pickle.load(open("results_vgg19.p", "rb"))
-    """
+    # results_vgg19 = pickle.load(open("results_vgg19.p", "rb"))
     results_inception_v1 = predict("inception_v1", "inception_model_adam_100.h5")
     pickle.dump(results_inception_v1, open("results_inception_v1.p", "wb"))
-    """
-    results_inception_v1 = pickle.load(open("results_inception_v1.p", "rb"))
+    # results_inception_v1 = pickle.load(open("results_inception_v1.p", "rb"))
     combined_prediction(results_vgg19, results_inception_v1)
 
 if __name__ == '__main__':
