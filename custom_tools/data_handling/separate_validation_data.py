@@ -1,3 +1,7 @@
+# TODO Add shebang
+"""
+Goes through all training data classes and puts a maximum of k images from each class into the validation set.
+"""
 import os
 import shutil
 

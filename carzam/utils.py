@@ -1,8 +1,6 @@
-# TODO Add shebang
 """
 
 """
-
 from keras.preprocessing import image
 
 import numpy as np

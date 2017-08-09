@@ -1,3 +1,7 @@
+# TODO Add shebang
+"""
+Scans the list for training or test data and moves the corresponding images from the main image directory to a format supported by Keras for model training, validation or testing.
+"""
 import os
 import shutil
 

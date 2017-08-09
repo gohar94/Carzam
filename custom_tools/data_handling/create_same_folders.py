@@ -1,3 +1,8 @@
+# TODO Add shebang.
+"""
+Creates all the same folders in test or valid folders as those in train folder.
+Needed for training and testing models because keras requires same classes (directories) to be present in training, test and validation stages.
+"""
 import os
 
 if __name__ == '__main__':
