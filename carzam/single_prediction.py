@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import utils
 import pickle
+import sys
 from compcars_vgg19_model import vgg19_model
 from compcars_inception_v1_model import googlenet_model
 
@@ -29,8 +30,11 @@ def predict(image_file_path):
     model_vgg19 = vgg19_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
     model_inception_v1 = googlenet_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
 
-    model_vgg19.load_weights(model_path + '')
-    model_inception_v1.load_weights(model_path + '')
+    model_vgg19.load_weights(model_path + 'vgg19_model_60.h5')
+    model_inception_v1.load_weights(model_path + 'inception_model_adam_100.h5')
 
     probs = model_vgg19.predict(img)
     print probs
+
+if __name__ == '__main__':
+    predict(sys.argv[1])
