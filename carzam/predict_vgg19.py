@@ -6,7 +6,7 @@ from keras.optimizers import SGD
 from keras.layers import Dense, Convolution2D, MaxPooling2D, ZeroPadding2D, Dropout, Flatten, Activation
 from keras.preprocessing import image
 from keras.models import Sequential
-
+import numpy as np
 import utils
 
 def vgg19_model(img_rows, img_cols, channel=1, num_classes=None, vgg19_model_path="../imagenet_models"):
@@ -90,7 +90,15 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None, vgg19_model_pat
 
     return model
 
-def main():
+def predict(model_name, weights_filename):
+    """
+    Predicts the test images and shows how many correct and incorrect predictions were made for Top 1 and Top 5 classes.
+
+    @param model_name: String containing the name of the model to use for prediction.
+    @param weights_filename: String containing the filename of the weights file to load for the corresponding model.
+
+    @return: List of lists of probabilities corresponding to each class for each image if successful, else None.
+    """
     img_rows = 224
     img_cols = 224
     channel = 3
@@ -99,33 +107,47 @@ def main():
     model_path = "../models/"
     imagenet_model_path = "../imagenet_models/"
 
+    # Get images
     batches = utils.get_batches(data_path+'train', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=batch_size)
-    val_batches = utils.get_batches(data_path+'valid', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=batch_size)
     test_batches = utils.get_batches(data_path+'test', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), shuffle=False, batch_size=batch_size, class_mode=None)
-    model_vgg19 = vgg19_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
-    model_vgg19.load_weights(model_path+'vgg19_model_60.h5')
-    probs_vgg19 = model_vgg19.predict_generator(test_batches, test_batches.nb_sample)
-    labels_vgg19 = test_batches.classes
-    labels_predicted_vgg19 = [np.argmax(prob) for prob in probs_vgg19]
-    classes_vgg19 = [classes_ids[idx] for idx in labels_predicted_vgg19]
-    correct_vgg19, incorrect_vgg19 = check_count_correct(filenames, classes_vgg19)
-
-    print "Probabilities"
-    print probs_vgg19
-    print "Labels"
-    print labels_vgg19
-    print "Top 1: Correct %d, Incorrect %d" % (correct_vgg19, incorrect_vgg19)
     
-    # Get indices for the top 5 probabilities
-    top_5_labels_pred_vgg19 = [np.argpartition(prob, -5)[-5:] for prob in probs_vgg19]
-    print top_5_labels_pred_vgg19
-    classes_top_5_vgg19 = []
-    for i in range(len(top_5_labels_pred_vgg19)):
-        classes_temp = [classes_ids[idx] for idx in top_5_labels_pred_vgg19[i]]
-        classes_top_5_vgg19.append(classes_temp)
-    print classes_top_5_vgg19
-    correct_vgg19_top5, incorrect_vgg19_top5 = check_count_correct_top_5(filenames, classes_top_5_vgg19)
-    print "Top 5: Correct %d, Incorrect %d" % (correct_vgg19_top5, incorrect_vgg19_top5)
+    # Create model and load weights
+    print "Using %s model" % model_name
+    if model_name == "vgg19":
+        model = vgg19_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
+    elif model_name == "inception_v1":
+        model = googlenet_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
+    else:
+        return None
+    model.load_weights(model_path + weights_filename)
+    
+    # Predict
+    probs = model.predict_generator(test_batches, test_batches.nb_sample)
+    labels = test_batches.classes
+    filenames = test_batches.filenames
+
+    # Get a list of all the class labels
+    classes_ids = list(iter(batches.class_indices))
+    for c in batches.class_indices:
+        classes_ids[batches.class_indices[c]] = c
+    
+    # Process the results for Top 1
+    labels_predicted = [np.argmax(prob) for prob in probs]
+    classes = [classes_ids[idx] for idx in labels_predicted]
+    correct, incorrect = utils.count_correct_compcars(filenames, classes)
+
+    # Process the results for Top 5
+    top_5_labels_pred = [np.argpartition(prob, -5)[-5:] for prob in probs]
+    classes_top_5 = []
+    for i in range(len(top_5_labels_pred)):
+        classes_temp = [classes_ids[idx] for idx in top_5_labels_pred[i]]
+        classes_top_5.append(classes_temp)
+    correct_top5, incorrect_top5 = utils.count_correct_compcars_top_k(filenames, classes_top_5)
+    
+    print "Top 1: Correct %d, Incorrect %d" % (correct, incorrect)
+    print "Top 5: Correct %d, Incorrect %d" % (correct_top5, incorrect_top5)
+    return probs
 
 if __name__ == '__main__':
-    main()
+    probs_vgg19 = predict("vgg19", "vgg19_model_60.h5")
+    probs_inceptionV1 = predict("inception_v1", "inception_model_adam_100.h5")
