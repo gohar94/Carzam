@@ -1,3 +1,12 @@
+# TODO Add shebang
+"""
+
+"""
+
+from keras.preprocessing import image
+
+import numpy as np
+
 def get_batches(path, gen=image.ImageDataGenerator(), shuffle=True, batch_size=8, class_mode='categorical'):
     """
     Takes the path to a directory, and generates batches of augmented/normalized data. Yields batches indefinitely, in an infinite loop.

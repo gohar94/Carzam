@@ -2,16 +2,14 @@
 """
 
 """
+from keras.optimizers import SGD
+from keras.layers import Dense, Convolution2D, MaxPooling2D, ZeroPadding2D, Dropout, Flatten, Activation
+from keras.preprocessing import image
+from keras.models import Sequential
 
 import utils
 
-IMG_ROWS = 224
-IMG_COLS = 224
-CHANNEL = 3
-BATCH_SIZE = 64
-DATA_PATH = "../../data/compcars/data/image/"
-
-def vgg19_model(img_rows, img_cols, channel=1, num_classes=None):
+def vgg19_model(img_rows, img_cols, channel=1, num_classes=None, vgg19_model_path="../imagenet_models"):
     """
     VGG 19 Model for Keras
 
@@ -78,7 +76,7 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None):
     model.add(Dense(1000, activation='softmax'))
 
     # Loads ImageNet pre-trained data
-    model.load_weights('imagenet_models/vgg19_weights.h5')
+    model.load_weights(vgg19_model_path+'vgg19_weights.h5')
 
     # Truncate and replace softmax layer for transfer learning
     model.layers.pop()
@@ -93,11 +91,19 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None):
     return model
 
 def main():
-    batches = utils.get_batches(DATA_PATH+'train', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=BATCH_SIZE)
-    val_batches = utils.get_batches(DATA_PATH+'valid', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=BATCH_SIZE)
-    test_batches = utils.get_batches(DATA_PATH+'test', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), shuffle=False, batch_size=BATCH_SIZE, class_mode=None)
-    model_vgg19 = vgg19_model(img_rows, img_cols, channel, batches.nb_class)
-    model_vgg19.load_weights('vgg19_model_60.h5')
+    img_rows = 224
+    img_cols = 224
+    channel = 3
+    batch_size = 64
+    data_path = "../data/compcars/data/image/"
+    model_path = "../models/"
+    imagenet_model_path = "../imagenet_models/"
+
+    batches = utils.get_batches(data_path+'train', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=batch_size)
+    val_batches = utils.get_batches(data_path+'valid', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=batch_size)
+    test_batches = utils.get_batches(data_path+'test', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), shuffle=False, batch_size=batch_size, class_mode=None)
+    model_vgg19 = vgg19_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
+    model_vgg19.load_weights(model_path+'vgg19_model_60.h5')
     probs_vgg19 = model_vgg19.predict_generator(test_batches, test_batches.nb_sample)
     labels_vgg19 = test_batches.classes
     labels_predicted_vgg19 = [np.argmax(prob) for prob in probs_vgg19]
@@ -109,8 +115,9 @@ def main():
     print "Labels"
     print labels_vgg19
     print "Top 1: Correct %d, Incorrect %d" % (correct_vgg19, incorrect_vgg19)
-
-    top_5_labels_pred_vgg19 = [np.argpartition(prob, -5)[-5:] for prob in probs_vgg19] # get indices for top 5 probs
+    
+    # Get indices for the top 5 probabilities
+    top_5_labels_pred_vgg19 = [np.argpartition(prob, -5)[-5:] for prob in probs_vgg19]
     print top_5_labels_pred_vgg19
     classes_top_5_vgg19 = []
     for i in range(len(top_5_labels_pred_vgg19)):
