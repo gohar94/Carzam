@@ -3,7 +3,7 @@
 
 """
 from keras.preprocessing import image
-import cv2
+from PIL import Image
 import numpy as np
 import utils
 import pickle
@@ -14,7 +14,12 @@ def predict(image_file_path):
     """
 
     """
-    img = cv2.imread(image_file_path)
+    img = Image.open(image_file_path)
+    if img.size != (img_rows, img_cols):
+        img = img.resize((img_rows, img_cols))
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = utils.vgg_preprocess(x)
 
     img_rows = 224
     img_cols = 224
@@ -32,5 +37,5 @@ def predict(image_file_path):
     model_vgg19.load_weights(model_path + '')
     model_inception_v1.load_weights(model_path + '')
 
-    probs = model_vgg19.predict(img)
+    probs = model_vgg19.predict(x)
     print probs
