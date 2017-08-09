@@ -3,13 +3,16 @@
 
 """
 from keras.optimizers import SGD
-from keras.layers import Dense, Convolution2D, MaxPooling2D, ZeroPadding2D, Dropout, Flatten, Activation
+from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, merge, Flatten, Activation
 from keras.preprocessing import image
-from keras.models import Sequential
+from keras.regularizers import l2
+from keras.models import Model, Sequential
 import numpy as np
 import utils
+from googlenet_custom_layers import LRN, PoolHelper
+import pickle
 
-def googlenet_model(img_rows, img_cols, channel=1, num_classes=None, inception_model_path="../imagenet_models/"):
+def googlenet_model(img_rows, img_cols, channel=1, num_classes=None, model_path="../imagenet_models/"):
     """
     GoogLeNet a.k.a. Inception v1 for Keras
 
@@ -22,10 +25,13 @@ def googlenet_model(img_rows, img_cols, channel=1, num_classes=None, inception_m
     Blog Post:
     http://joelouismarino.github.io/blog_posts/blog_googlenet_keras.html
 
-    Parameters:
-      img_rows, img_cols - resolution of inputs
-      channel - 1 for grayscale, 3 for color
-      num_classes - number of class labels for our classification task
+    @param img_rows: Rows in input.
+    @param img_cols: Columns in input.
+    @param channel: 1 for grayscale, 3 for color.
+    @param num_classes: Number of class labels for our classification task.
+    @param model_path: Path containing the ImageNet model.
+
+    @return: Model object.
     """
 
     input = Input(shape=(channel, img_rows, img_cols))
@@ -156,7 +162,7 @@ def googlenet_model(img_rows, img_cols, channel=1, num_classes=None, inception_m
     model = Model(input=input, output=[loss1_classifier_act,loss2_classifier_act,loss3_classifier_act])
 
     # Load ImageNet pre-trained data
-    model.load_weights(inception_model_path+'googlenet_weights.h5')
+    model.load_weights(model_path+'googlenet_weights.h5')
 
     # Truncate and replace softmax layer for transfer learning
     # Cannot use model.layers.pop() since model is not of Sequential() type
@@ -172,7 +178,8 @@ def googlenet_model(img_rows, img_cols, channel=1, num_classes=None, inception_m
     model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model
-def vgg19_model(img_rows, img_cols, channel=1, num_classes=None, vgg19_model_path="../imagenet_models/"):
+
+def vgg19_model(img_rows, img_cols, channel=1, num_classes=None, model_path="../imagenet_models/"):
     """
     VGG 19 Model for Keras
 
@@ -182,10 +189,13 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None, vgg19_model_pat
     ImageNet Pretrained Weights
     https://drive.google.com/file/d/0Bz7KyqmuGsilZ2RVeVhKY0FyRmc/view?usp=sharing
 
-    Parameters:
-      img_rows, img_cols - resolution of inputs
-      channel - 1 for grayscale, 3 for color
-      num_classes - number of class labels for our classification task
+    @param img_rows: Rows in input.
+    @param img_cols: Columns in input.
+    @param channel: 1 for grayscale, 3 for color.
+    @param num_classes: Number of class labels for our classification task.
+    @param model_path: Path containing the ImageNet model.
+
+    @return: Model object.
     """
     model = Sequential()
     model.add(ZeroPadding2D((1,1),input_shape=(channel, img_rows, img_cols)))
@@ -239,7 +249,7 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None, vgg19_model_pat
     model.add(Dense(1000, activation='softmax'))
 
     # Loads ImageNet pre-trained data
-    model.load_weights(vgg19_model_path+'vgg19_weights.h5')
+    model.load_weights(model_path+'vgg19_weights.h5')
 
     # Truncate and replace softmax layer for transfer learning
     model.layers.pop()
@@ -253,6 +263,18 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None, vgg19_model_pat
 
     return model
 
+class PredictionResults(object):
+    """
+    # TODO Fill docstring.
+    """
+    def __init__(self):
+        """
+        # TODO Fill docstring.
+        """
+        probabilities = None
+        classes_ids = None
+        filenames = None
+
 def predict(model_name, weights_filename):
     """
     Predicts the test images and shows how many correct and incorrect predictions were made for Top 1 and Top 5 classes.
@@ -260,7 +282,7 @@ def predict(model_name, weights_filename):
     @param model_name: String containing the name of the model to use for prediction.
     @param weights_filename: String containing the filename of the weights file to load for the corresponding model.
 
-    @return: List of lists of probabilities corresponding to each class for each image if successful, else None.
+    @return: PredictionResults object if successful, else None.
     """
     img_rows = 224
     img_cols = 224
@@ -305,12 +327,57 @@ def predict(model_name, weights_filename):
     for i in range(len(top_5_labels_pred)):
         classes_temp = [classes_ids[idx] for idx in top_5_labels_pred[i]]
         classes_top_5.append(classes_temp)
-    correct_top5, incorrect_top5 = utils.count_correct_compcars_top_k(filenames, classes_top_5)
+    correct_top_5, incorrect_top_5 = utils.count_correct_compcars_top_k(filenames, classes_top_5)
     
     print "Top 1: Correct %d, Incorrect %d" % (correct, incorrect)
-    print "Top 5: Correct %d, Incorrect %d" % (correct_top5, incorrect_top5)
-    return probs
+    print "Top 5: Correct %d, Incorrect %d" % (correct_top_5, incorrect_top_5)
+
+    results = PredictionResults()
+    results.probabilities = probs
+    results.filenames = filenames
+    results.classes_ids = classes_ids
+
+    return results
+
+def combined_prediction(results_a, results_b):
+    """
+    Reports the correct and incorrect number of predictions in two PredictionResults objects for Top 1 and Top 5 classes.
+    
+    @param results_a: First PredictionResults object.
+    @param results_b: Second PredictionResults object.
+    """
+    assert(results_a.classes_ids == results_b.classes_ids)
+    assert(results_a.filenames == results_b.filenames)
+    
+    classes_ids = results_a.classes_ids
+    filenames = results_a.filenames
+    avg_probs = utils.average_probabilities(results_a.probabilities, results_b.probabilities)
+    labels_predicted_combined = [np.argmax(prob) for prob in avg_probs]
+    classes_combined = [classes_ids[idx] for idx in labels_predicted_combined]
+    correct, incorrect = utils.count_correct_compcars(filenames, classes_combined) 
+    top_5_labels_pred_combined = [np.argpartition(prob, -5)[-5:] for prob in avg_probs]
+    classes_top_5_combined = []
+    for i in range(len(top_5_labels_pred_combined)):
+        classes_temp = [classes_ids[idx] for idx in top_5_labels_pred_combined[i]]
+        classes_top_5_combined.append(classes_temp)
+    correct_top_5, incorrect_top_5 = utils.count_correct_compcars_top_k(filenames, classes_top_5_combined)
+
+    print "Combined prediction results:"
+    print "Top 1: Correct %d, Incorrect %d" % (correct, incorrect)
+    print "Top 5: Correct %d, Incorrect %d" % (correct_top_5, incorrect_top_5)
+
+def main():
+    """
+    results_vgg19 = predict("vgg19", "vgg19_model_60.h5")
+    pickle.dump(results_vgg19, open("results_vgg19.p", "wb"))
+    """
+    results_vgg19 = pickle.load(open("results_vgg19.p", "rb"))
+    """
+    results_inception_v1 = predict("inception_v1", "inception_model_adam_100.h5")
+    pickle.dump(results_inception_v1, open("results_inception_v1.p", "wb"))
+    """
+    results_inception_v1 = pickle.load(open("results_inception_v1.p", "rb"))
+    combined_prediction(results_vgg19, results_inception_v1)
 
 if __name__ == '__main__':
-    probs_vgg19 = predict("vgg19", "vgg19_model_60.h5")
-    probs_inceptionV1 = predict("inception_v1", "inception_model_adam_100.h5")
+    main()
