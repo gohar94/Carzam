@@ -42,6 +42,8 @@ def count_correct_compcars(filenames, classes):
     assert(len(filenames) == len(classes))
     correct = incorrect = 0
     for i in range(len(filenames)):
+        if filenames[i] == "97_872/9abb7d0f282617.jpg":
+            print classes[i]
         if filenames[i].split('/')[0] == classes[i]:
             correct += 1
         else:
@@ -63,6 +65,7 @@ def count_correct_compcars_top_k(filenames, classes_top_k):
     correct = incorrect = 0
     for i in range(len(filenames)):
         if filenames[i].split('/')[0] in classes_top_k[i]:
+            # print filenames[i]
             correct += 1
         else:
             incorrect += 1
