@@ -9,8 +9,6 @@ import pickle
 import sys
 from compcars_vgg19_model import vgg19_model
 from compcars_inception_v1_model import googlenet_model
-from keras import backend as K
-K.set_image_dim_ordering('th')
 
 def predict(model, batches, test_batches):
     # probs = model.predict(x)
@@ -41,8 +39,8 @@ def run(image_file_path):
 
     x = image.load_img(image_file_path, target_size=(224, 224))
     x = image.img_to_array(x)
+    x = utils.vgg_preprocess(x)
     x = np.expand_dims(x, axis=0)
-    # x = utils.vgg_preprocess(x)
 
     batches = utils.get_batches(data_path+'train', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=batch_size, shuffle=False, class_mode=None)
     test_batches = utils.get_batches('../data/crap', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=1, shuffle=False, class_mode=None)
