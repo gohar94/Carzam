@@ -65,10 +65,10 @@ def run(image_file_path):
     probs_vgg19 = predict(model_vgg19, batches, img)
 
     avg_probs = utils.average_probabilities(probs_inception_v1, probs_vgg19)
-    get_prediction_classes(avg_probs)
+    get_prediction_classes(avg_probs, batches)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print "Incomplete arguments"
-        return
-    run(sys.argv[1])
+    else:
+        run(sys.argv[1])
