@@ -10,13 +10,14 @@ import sys
 from compcars_vgg19_model import vgg19_model
 from compcars_inception_v1_model import googlenet_model
 
-def predict(model, batches, img):
+def predict_and_get_probabilities(model, batches, img):
     """
 
     """
     probs = model.predict(img)
     assert(len(probs) == 1)
     get_prediction_classes(probs, batches)
+
     return probs
 
 def get_prediction_classes(probs, batches):
@@ -33,6 +34,47 @@ def get_prediction_classes(probs, batches):
         classes_top_5.append(classes_temp)
     print classes
     print classes_top_5
+
+    return classes, classes_top_5
+
+def get_loaded_models_and_batches(img_rows, img_cols, channel, batch_size, data_path, model_path, imagenet_model_path):
+    """
+    # TODO Docstring.
+    """
+    # Get training set image batches. TODO Might want to pickle these and not load every time.
+    batches = utils.get_batches(data_path+'train', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=batch_size, shuffle=False, class_mode=None)
+
+    # Construct models.
+    model_vgg19 = vgg19_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
+    model_inception_v1 = googlenet_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
+
+    # Load weights.
+    model_vgg19.load_weights(model_path + 'vgg19_model_60.h5')
+    model_inception_v1.load_weights(model_path + 'inception_model_adam_100.h5')
+
+    return batches, model_vgg19, model_inception_v1
+
+def get_image(img_rows, img_cols, image_file_path):
+    """
+    TODO Doctring.
+    """
+    # DO NOT CHANGE THE ORDER OF THE NEXT 4 LINES - JUST. DO. NOT.
+    img = image.load_img(image_file_path, target_size=(img_rows, img_cols))
+    img = image.img_to_array(img)
+    img = utils.vgg_preprocess(img)
+    img = np.expand_dims(img, axis=0)
+
+    return img
+
+def perform_combined_prediction(model_vgg19, model_inception_v1, batches, img):
+    """
+    TODO Docstring.
+    """
+    probs_inception_v1 = predict_and_get_probabilities(model_inception_v1, batches, img)
+    probs_vgg19 = predict_and_get_probabilities(model_vgg19, batches, img)
+    avg_probs = utils.average_probabilities(probs_inception_v1, probs_vgg19)
+    classes, classes_top_5 = get_prediction_classes(avg_probs, batches)
+
     return classes, classes_top_5
 
 def run(image_file_path):
@@ -47,25 +89,11 @@ def run(image_file_path):
     model_path = "../models/"
     imagenet_model_path = "../imagenet_models/"
 
-    # DO NOT CHANGE THE ORDER OF THE NEXT 4 LINES - JUST. DO. NOT.
-    img = image.load_img(image_file_path, target_size=(224, 224))
-    img = image.img_to_array(img)
-    img = utils.vgg_preprocess(img)
-    img = np.expand_dims(img, axis=0)
+    batches, model_vgg19, model_inception_v1 = get_loaded_models_and_batches(img_rows, img_cols, channel, batch_size, data_path, model_path, imagenet_model_path)
+    img = get_image(img_rows, img_cols, image_file_path)
+    classes, classes_top_5 = perform_combined_prediction(model_vgg19, model_inception_v1, batches, img)
 
-    batches = utils.get_batches(data_path+'train', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=batch_size, shuffle=False, class_mode=None)
-
-    model_vgg19 = vgg19_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
-    model_inception_v1 = googlenet_model(img_rows, img_cols, channel, batches.nb_class, imagenet_model_path)
-
-    model_vgg19.load_weights(model_path + 'vgg19_model_60.h5')
-    model_inception_v1.load_weights(model_path + 'inception_model_adam_100.h5')
-
-    probs_inception_v1 = predict(model_inception_v1, batches, img)
-    probs_vgg19 = predict(model_vgg19, batches, img)
-
-    avg_probs = utils.average_probabilities(probs_inception_v1, probs_vgg19)
-    get_prediction_classes(avg_probs, batches)
+    return classes, classes_top_5
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
