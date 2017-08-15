@@ -10,6 +10,8 @@ model_path = "../models/"
 imagenet_model_path = "../imagenet_models/"
 
 batches, model_vgg19, model_inception_v1 = pred.get_loaded_models_and_batches(img_rows, img_cols, channel, batch_size, data_path, model_path, imagenet_model_path)
+make_strings = utils.get_pickled_list('make_names.p')
+model_strings = utils.get_pickled_list('model_names.p')
 
 app = Flask(__name__)
 
@@ -19,7 +21,8 @@ def root():
     classes, classes_top_5 = pred.perform_combined_prediction(model_vgg19, model_inception_v1, batches, img)
     print classes
     print classes_top_5
-    response = jsonify(classes=classes, classes_top_5=classes_top_5)
+    classes_out, classes_out_top_5 = get_classes_to_output(classes, classes_top_5, make_strings, model_strings)
+    response = jsonify(classes=classes_out, classes_top_5=classes_out_top_5)
     return response
 
 if __name__ == "__main__":

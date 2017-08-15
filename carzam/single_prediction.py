@@ -10,6 +10,18 @@ import sys
 from compcars_vgg19_model import vgg19_model
 from compcars_inception_v1_model import googlenet_model
 
+def class_id_to_strings(class_id, make_strings, model_strings):
+    """
+    TODO Docstring.
+    """
+    make_id = class_id.split('/')[0]
+    model_id = class_id.split('/')[1]
+    try:
+        # Error checking to avoid out of bounds errors
+        return make_strings[make_id], model_strings[model_id]
+    except:
+        return None, None
+
 def predict_and_get_probabilities(model, batches, img):
     """
 
@@ -36,6 +48,20 @@ def get_prediction_classes(probs, batches):
     print classes_top_5
 
     return classes, classes_top_5
+
+def get_classes_to_output(classes, classes_top_5, make_strings, model_strings):
+    """
+    TODO Docstring.
+    """
+    classes_out = []
+    classes_out_top_5 = []
+    for class_id in classes:
+        make_string, model_string = class_id_to_strings(class_id, make_strings, model_strings)
+        classes_out.append({'class_id': class_id, 'make': make_string, 'model': model_string})
+    for class_id in classes_top_5:
+        make_string, model_string = class_id_to_strings(class_id, make_strings, model_strings)
+        classes_out_top_5.append({'class_id': class_id, 'make': make_string, 'model': model_string})
+    return classes_out, classes_out_top_5
 
 def get_loaded_models_and_batches(img_rows, img_cols, channel, batch_size, data_path, model_path, imagenet_model_path):
     """

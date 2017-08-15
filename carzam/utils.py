@@ -4,6 +4,7 @@
 from keras.preprocessing import image
 
 import numpy as np
+import pickle
 
 def get_batches(path, gen=image.ImageDataGenerator(), shuffle=True, batch_size=8, class_mode='categorical'):
     """
@@ -88,3 +89,11 @@ def average_probabilities(probs_a, probs_b):
             temp.append((probs_a[i][j]+probs_b[i][j])/2)
         final.append(temp)
     return final
+
+def get_pickled_list(file_path):
+    """
+    TODO Docstring.
+    """
+    with open(file_path, 'rb') as handle:
+        data = pickle.load(handle)
+    return data
