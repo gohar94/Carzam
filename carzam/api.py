@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 import single_prediction as pred
+import utils
 
 img_rows = 224
 img_cols = 224
@@ -19,9 +20,8 @@ app = Flask(__name__)
 def root():
     img = pred.get_image(img_rows, img_cols, "mini.png")
     classes, classes_top_5 = pred.perform_combined_prediction(model_vgg19, model_inception_v1, batches, img)
-    print classes
-    print classes_top_5
-    classes_out, classes_out_top_5 = get_classes_to_output(classes, classes_top_5, make_strings, model_strings)
+    classes_out, classes_out_top_5 = pred.get_classes_to_output(classes, classes_top_5, make_strings, model_strings)
+    print classes_out_top_5
     response = jsonify(classes=classes_out, classes_top_5=classes_out_top_5)
     return response
 

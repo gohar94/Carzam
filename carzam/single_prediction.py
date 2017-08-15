@@ -14,11 +14,11 @@ def class_id_to_strings(class_id, make_strings, model_strings):
     """
     TODO Docstring.
     """
-    make_id = class_id.split('/')[0]
-    model_id = class_id.split('/')[1]
+    make_id = class_id.split('_')[0]
+    model_id = class_id.split('_')[1]
     try:
         # Error checking to avoid out of bounds errors
-        return make_strings[make_id], model_strings[model_id]
+        return make_strings[int(make_id)-1], model_strings[int(model_id)-1]
     except:
         return None, None
 
@@ -39,11 +39,8 @@ def get_prediction_classes(probs, batches):
     classes_ids = {v: k for k, v in batches.class_indices.iteritems()}
     labels_predicted = [np.argmax(prob) for prob in probs]
     classes = [classes_ids[idx] for idx in labels_predicted]
-    top_5_labels_pred = [np.argpartition(prob, -5)[-5:] for prob in probs]
-    classes_top_5 = []
-    for i in range(len(top_5_labels_pred)):
-        classes_temp = [classes_ids[idx] for idx in top_5_labels_pred[i]]
-        classes_top_5.append(classes_temp)
+    top_5_labels_pred = np.argpartition(probs[0], -5)[-5:]
+    classes_top_5 = [classes_ids[idx] for idx in top_5_labels_pred]
     print classes
     print classes_top_5
 
