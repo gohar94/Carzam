@@ -21,6 +21,8 @@ if __name__ == '__main__':
         temp = temp.replace("[", "")
         temp = temp.replace("]", "")
         temp = temp.replace("'", "")
+        if len(temp) > 1:
+            temp = temp[1:]
         model_names_list.append(temp)
     print model_names_list
     print len(model_names_list)
