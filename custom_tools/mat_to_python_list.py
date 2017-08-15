@@ -1,6 +1,7 @@
 import scipy.io
 import sys
 import pickle
+import numpy as np
 
 if __name__ == '__main__':
     mat = scipy.io.loadmat(sys.argv[1])
@@ -16,9 +17,13 @@ if __name__ == '__main__':
     model_names = mat['model_names']
     model_names_list = []
     for model in model_names:
-        model_names_list.append(model[0])
+        temp = str(model[0])
+        temp = temp.replace("[", "")
+        temp = temp.replace("]", "")
+        temp = temp.replace("'", "")
+        model_names_list.append(temp)
     print model_names_list
     print len(model_names_list)
-    print model_names_list[0]
+    print type(model_names_list[0])
     with open('model_names.p', 'wb') as handle:
         pickle.dump(model_names_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
