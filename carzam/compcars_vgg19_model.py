@@ -69,9 +69,9 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None, model_path="../
     # Add Fully Connected Layer
     model.add(Flatten())
     model.add(Dense(4096, activation='relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.7)) # Originally 0.5
     model.add(Dense(4096, activation='relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.7)) # Originally 0.5
     model.add(Dense(1000, activation='softmax'))
 
     # Loads ImageNet pre-trained data

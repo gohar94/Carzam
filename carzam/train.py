@@ -19,7 +19,16 @@ def train(model_name):
     imagenet_model_path = "../imagenet_models/"
     
     # Get images
-    batches = utils.get_batches(data_path+'train', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=batch_size)
+    batches = utils.get_batches(data_path+'train', 
+            gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess, 
+                rotation_range=10, 
+                width_shift_range=0.1, 
+                height_shift_range=0.1, 
+                shear_range=0.15,
+                zoom_range=0.1,
+                channel_shift_range=10.,
+                horizontal_flip=True), 
+            batch_size=batch_size)
     val_batches = utils.get_batches(data_path+'valid', gen=image.ImageDataGenerator(preprocessing_function=utils.vgg_preprocess), batch_size=batch_size)
     
     # Create model
